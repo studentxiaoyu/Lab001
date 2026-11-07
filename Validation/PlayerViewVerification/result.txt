@@ -1,0 +1,3 @@
+PASS: desktop Play smoke check; no VR hardware tested.
+Camera: CenterEyeAnchor at (0.00, 1.65, 0.00)
+Room bounds: Center: (0.00, 2.38, 0.00), Extents: (10.50, 2.45, 10.50)

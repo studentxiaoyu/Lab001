@@ -1,0 +1,78 @@
+
+# ==============================================
+# Lab001 - Unity VR Physics Laboratory
+# Unity 6.3 / Meta XR / Photon Fusion / URP
+# ==============================================
+
+# Unity automatically generated files
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# Unity build outputs
+/[Bb]uild/
+/[Bb]uilds/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.opendb
+*.VC.db
+
+# Debug and temporary files
+*.tmp
+*.bak
+*.log
+*.pdb
+*.mdb
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+
+# Generated build packages
+*.apk
+*.aab
+*.unitypackage
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local environment and signing secrets
+.env
+.env.*
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+
+# ==============================================
+# IMPORTANT - Keep these tracked:
+#
+# Assets/          (including all .meta files)
+# Packages/        (including packages-lock.json)
+# ProjectSettings/
+#
+# Includes:
+# - Meta XR SDK project assets
+# - Photon Fusion project assets
+# - URP configuration assets
+# - Scenes, Prefabs, Scripts and Materials
+# ==============================================

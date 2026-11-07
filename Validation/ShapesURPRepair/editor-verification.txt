@@ -1,0 +1,14 @@
+Editor-only observation; no player build or VR acceptance.
+Scene=Assets/Scenes/Main_URP_Debug.unity
+Playing=False
+CompatibilityMode=True
+Samples=37
+BeginCameraCallbacks=6660
+EndCameraCallbacks=6660
+MaxTotal=11
+MaxActive=0
+MaxPendingCommands=0
+FinalTotal=11
+FinalActive=0
+FinalPendingCommands=0
+NewShapesErrors=0
