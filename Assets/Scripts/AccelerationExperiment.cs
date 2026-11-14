@@ -175,7 +175,8 @@ public class AccelerationExperiment : MonoBehaviour
         weights.localScale = new Vector3(1, Mathf.Lerp(0.4f, 2, (cartMass - 0.2f) / 1.8f), 1);
         rope.SetPosition(0, cart.TransformPoint(new Vector3(0, 0.03f, 0.05f)));
         rope.SetPosition(1, pulley.position + track.up * 0.065f);
-        rope.SetPosition(2, bucket.position + Vector3.up * 0.13f);
+        // The rope meets the crown of the bucket's handle.
+        rope.SetPosition(2, bucket.TransformPoint(new Vector3(0f, 0.12f, 0f)));
         pulleyMesh.transform.localRotation = Quaternion.Euler(position * Mathf.Rad2Deg / 0.065f, 0, 90);
     }
 
@@ -283,11 +284,13 @@ public class AccelerationExperiment : MonoBehaviour
         double velocity = phase == Phase.Complete ? 0 : solution.Acceleration * elapsed;
         string[] names = {"CART MASS", "BUCKET MASS", "FRICTION", "DOWNHILL ANGLE"};
         if (worldReadout != null) worldReadout.text = string.Format(
-            "NEWTON'S SECOND LAW  |  {0}\n" +
-            "M {1:F2} kg   m {2:F2} kg\n" +
-            "mu {3:F2}   angle {4:F1} deg\n" +
-            "t {5:F2} s   x {6:F3} m\n" +
-            "v {7:F3} m/s   a {8:F3} m/s^2\n" +
+            "<b>NEWTON'S SECOND LAW</b>\n" +
+            "Status: {0}\n" +
+            "Cart {1:F2} kg   Bucket {2:F2} kg\n" +
+            "Friction {3:F2}   Angle {4:F1} deg\n\n" +
+            "Time {5:F2} s   Travel {6:F3} m\n" +
+            "Speed {7:F3} m/s\n" +
+            "<b>Acceleration {8:F3} m/s^2</b>\n" +
             "Tension {9:F3} N\nTrials {10}",
             phase, p.CartMass, p.HangingMass, p.Friction, p.AngleDegrees,
             elapsed, 0.5 * solution.Acceleration * elapsed * elapsed,
@@ -315,8 +318,8 @@ public class AccelerationExperiment : MonoBehaviour
             desktopReadout.text = summary;
         }
         if (parameterValues.Length >= 3) {
-            parameterValues[0].text = cartMass.ToString("F2");
-            parameterValues[1].text = hangingMass.ToString("F2");
+            parameterValues[0].text = $"{cartMass:F2} kg";
+            parameterValues[1].text = $"{hangingMass:F2} kg";
             parameterValues[2].text = friction.ToString("F2");
         }
     }

@@ -25,10 +25,13 @@ public class Y_Axis : Axis
     public float DownLineLength => WorldLength * (1 + centerPos) / 2;
 
     protected override void Awake() {
-        drawer = ObjectUtil.GetComponent<GraphDrawer>(transform.parent.parent);
+        drawer = GetComponentInParent<GraphDrawer>();
     }
 
     private void Update() {
+        if (!rectangle || !triangle || !drawer || !drawer.xAxis || !unitLineUp || !unitLineDown)
+            return;
+
         float halfWorldLength = WorldLength / 2;
 
         triangle.transform.localPosition     = Vector3.up * halfWorldLength;
@@ -46,32 +49,35 @@ public class Y_Axis : Axis
     }
 
     public override void ReceiveNewValue(float y) {
+        if (!float.IsFinite(y)) return;
+
         int isOut = IsOutOfRange(y); // 判断是否出界
 
         if (isOut == 1) {
             maxIndex = y;
-            minIndex = (centerPos + 1) / (1 - centerPos) * -y;
+            if (centerPos < 1f)
+                minIndex = (centerPos + 1) / (1 - centerPos) * -y;
         }
         else if (isOut == -1) {
             minIndex = y;
-            maxIndex = (1 - centerPos) / (1 + centerPos) * -y;
+            if (centerPos > -1f)
+                maxIndex = (1 - centerPos) / (1 + centerPos) * -y;
         }
     }
 
     public override void DrawShapes(Camera cam) {
-        // if (!cam.CompareTag("MainCamera")) return;
+        if (!rectangle || !drawer || !drawer.xAxis || !drawer.xAxis.rectangle || !unitLineUp || !unitLineDown ||
+            !float.IsFinite(maxIndex) || !float.IsFinite(minIndex))
+            return;
+
         using (Draw.Command(cam)) {
             float absMaxIndex = Mathf.Max(maxIndex, -minIndex);
-            float absMinIndex = Mathf.Min(maxIndex, -minIndex);
             float unitValue   = GetUnitValue(absMaxIndex); // 依据 Y 轴上界获取单位长度
             float unitCount   = absMaxIndex / unitValue;   // 计算单位数量
 
-            float unitWorldLength = Mathf.Max(UpLineLength, DownLineLength) / unitCount; // 每单位对应的 WorldLength
+            float unitWorldLength = unitCount > 0 ? Mathf.Max(UpLineLength, DownLineLength) / unitCount : 0;
             unitLineUp.DashSpacing   = unitWorldLength - unitLineUp.DashSize;
             unitLineDown.DashSpacing = unitWorldLength - unitLineDown.DashSize;
-
-            // 为了让 maxIndex = 9.9 时，坐标轴也显示出 1,2,3,4,5,6,7,8,9,10 的工作，对 unitCount 进行微调
-            if (unitCount + Tolerance > unitCount % 1) unitCount += Tolerance;
 
             float   halfWorldLength = WorldLength / 2;
             Vector3 startPos        = Vector3.up * halfWorldLength * centerPos;

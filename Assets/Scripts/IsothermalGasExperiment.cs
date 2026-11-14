@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -212,24 +211,10 @@ public class IsothermalGasExperiment : MonoBehaviour
             pressureGraph.ShowHighlightPoints();
         } else pressureGraph.HideHighlightPoints();
         int count=records.Count(r=>IsothermalGasPhysics.SameIsotherm(r.kelvin,r.isothermal,temperatureK));
-        var sb=new StringBuilder();
-        sb.AppendLine("BOYLE'S LAW | CLOSED IDEAL GAS");
-        sb.AppendFormat("V = {0:F1} mL = {1:F6} m^3\np = {2:F3} kPa\nT = {3:F1} K ({4:F1} C)\npV = {5:F5} Pa*m^3 = J\n",s.VolumeMl,s.VolumeM3,s.PressureKPa,s.TemperatureK,s.TemperatureK-273.15,s.PV);
-        sb.AppendLine("n = 0.02000 mol (fixed)");
-        sb.AppendLine("p = nRT/V; R = 8.314462618 J/(mol*K)");
-        sb.AppendLine(isothermal?"ISOTHERMAL: ON | thermostat holds T":"ISOTHERMAL: OFF | adjustable equilibrium T");
-        sb.AppendLine("A: VOLUME / piston   B: TEMPERATURE / thermostat");
-        sb.AppendLine("C: RECORD / observe p, V, T and pV");
-        sb.AppendLine("Model: quasistatic ideal gas, no leak or sensor noise.");
-        sb.AppendLine("Range: 200-1000 mL; 250-400 K; gauge 0-400 kPa.");
-        sb.AppendLine("p-V plot: recorded ISO states at current T only.");
-        sb.AppendLine("Live marker = current equilibrium (not a saved record).");
-        sb.AppendFormat("Plotted: {0} | total gas records: {1}\n",count,records.Count);
-        sb.AppendLine(message);
-        sb.AppendLine("Last 6: MODE / V(mL) / p(kPa) / T(K) / pV(J)");
-        foreach(var r in records.Skip(Math.Max(0,records.Count-6)))
-            sb.AppendFormat("{0} / {1:F0} / {2:F2} / {3:F1} / {4:F3}\n",r.isothermal?"ISO":"FREE",r.volumeMl,r.pressureKPa,r.kelvin,r.pv);
-        worldReadout.text=sb.ToString();
+        worldReadout.text = $"<b>BOYLE'S LAW</b>\nIsothermal: {(isothermal ? "ON" : "OFF")}\n\n" +
+            $"Volume  {s.VolumeMl:F0} mL\n<b>Pressure  {s.PressureKPa:F2} kPa</b>\n" +
+            $"Temperature  {s.TemperatureK:F1} K\npV  {s.PV:F3} J\n\n" +
+            $"p = nRT / V   |   n = 0.020 mol\nPlotted: {count}   |   Records: {records.Count}\n{message}";
         desktopReadout.text=string.Format(
             "<b><color=#176B70>GAS EXPERIMENT</color></b>\n" +
             "Temperature: <b>{0}</b>\n\n" +
@@ -243,7 +228,7 @@ public class IsothermalGasExperiment : MonoBehaviour
             s.TemperatureK, s.PV, records.Count, count, message);
         modeCaption.text=isothermal?"ISOTHERMAL: ON":"ISOTHERMAL: OFF";
         if(parameterValues.Length==3) {
-            parameterValues[0].text=volumeMl.ToString("F0");parameterValues[1].text=temperatureK.ToString("F1");
+            parameterValues[0].text=$"{volumeMl:F0} mL";parameterValues[1].text=$"{temperatureK:F1} K";
             parameterValues[2].text=isothermal?"ON":"OFF";
         }
 

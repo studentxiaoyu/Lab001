@@ -35,11 +35,13 @@ public static class DrawTool
                                 Transform     transform,
                                 float         fontSize,
                                 TMP_FontAsset fontAsset) {
-        Draw.FontSize = fontSize;
-        Draw.Matrix = transform.localToWorldMatrix;
-        Draw.Font = fontAsset;
+        if (!fontAsset)
+            fontAsset = ShapesAssets.Instance?.defaultFont;
+        if (!transform || !fontAsset || !fontAsset.material || string.IsNullOrEmpty(content))
+            return;
 
-        Draw.Text(pos, content, textAlign, color);
+        Draw.Matrix = transform.localToWorldMatrix;
+        Draw.Text(pos, content, textAlign, fontSize, fontAsset, color);
     }
 
     public static void DrawCircle(Vector3 pos, float radius, Color color, Transform transform) {

@@ -179,23 +179,11 @@ public class TransformerExperiment : MonoBehaviour
         var s=Current;
         if(s.VoltageRatio.HasValue){ratioGraph.SetHighlightPoint((float)s.TurnsRatio,(float)s.VoltageRatio.Value);ratioGraph.ShowHighlightPoints();}
         else ratioGraph.HideHighlightPoints();
-        var sb=new StringBuilder();
-        sb.AppendLine("IDEAL TRANSFORMER | AC RMS");
-        sb.AppendFormat("AC POWER: {0} (virtual only)\nU1 setting = {1:F2} V\nActual U1 = {2:F3} V RMS\nActual U2 = {3:F3} V RMS\nN1 = {4} turns; N2 = {5} turns\nN2/N1 = {6:F4}\n",s.Powered?"ON":"OFF",s.SetVoltage,s.InputVoltage,s.OutputVoltage,s.N1,s.N2,s.TurnsRatio);
-        sb.AppendLine("U2/U1 = "+(s.VoltageRatio.HasValue?s.VoltageRatio.Value.ToString("F4"):"undefined (actual U1 = 0)"));
-        sb.AppendLine(s.N2>s.N1?"STEP-UP":s.N2<s.N1?"STEP-DOWN":"1:1 ISOLATION RATIO");
-        sb.AppendLine("U2 = U1 * N2 / N1; ideal no-load, no losses.");
-        sb.AppendLine("Virtual supply only; no real electrical hardware.");
-        sb.AppendLine("A: AC / input   B: turns   C: record");
-        sb.AppendLine("Range: U1 0-24 V; integer turns 100-1000.");
-        sb.AppendLine("Graph: x=N2/N1; y=U2/U1. Powered, U1>0 only.");
-        sb.AppendLine("Equal x values share one graph point; table keeps all rows.");
-        sb.AppendLine("Live marker is not a saved record.");
-        sb.AppendLine("Knob target: "+new[]{"INPUT VOLTAGE","PRIMARY TURNS","SECONDARY TURNS"}[knobTarget]);
-        sb.AppendLine("Records: "+records.Count+" / 100");sb.AppendLine(message);
-        sb.AppendLine("Last 5: POWER / N1 / N2 / U1 / U2 (RMS V)");
-        foreach(var r in records.Skip(Math.Max(0,records.Count-5)))sb.AppendFormat("{0} / {1} / {2} / {3:F2} / {4:F2}\n",r.powered?"ON":"OFF",r.n1,r.n2,r.u1,r.u2);
-        worldReadout.text=sb.ToString();
+        string voltageRatio = s.VoltageRatio.HasValue ? s.VoltageRatio.Value.ToString("F2") : "--";
+        worldReadout.text = $"<b>IDEAL TRANSFORMER</b>\nAC power: {(s.Powered ? "ON" : "OFF")}\n\n" +
+            $"Input setting  {s.SetVoltage:F2} V RMS\nU1  {s.InputVoltage:F2} V RMS\n" +
+            $"<b>U2  {s.OutputVoltage:F2} V RMS</b>\nN1  {s.N1}   |   N2  {s.N2} turns\n" +
+            $"N2/N1  {s.TurnsRatio:F2}   |   U2/U1  {voltageRatio}\n\nRecords: {records.Count} / 100\n{message}";
         int plottedCount=records.Where(r=>r.powered && r.u1>0)
             .Select(r=>Math.Round(r.Ratio,6)).Distinct().Count();
         desktopReadout.text=string.Format(
@@ -226,7 +214,7 @@ public class TransformerExperiment : MonoBehaviour
         recordTable.Append(message).Append("</size>");
         desktopReadout.text+=recordTable.ToString();
         powerCaption.text=powered?"AC POWER: ON":"AC POWER: OFF";
-        if(parameterValues.Length==3){parameterValues[0].text=inputVoltage.ToString("F1");parameterValues[1].text=primaryTurns.ToString();parameterValues[2].text=secondaryTurns.ToString();}
+        if(parameterValues.Length==3){parameterValues[0].text=$"{inputVoltage:F1} V RMS";parameterValues[1].text=$"{primaryTurns} turns";parameterValues[2].text=$"{secondaryTurns} turns";}
         primaryLabel.text="PRIMARY\nN1 = "+s.N1;secondaryLabel.text="SECONDARY\nN2 = "+s.N2;
         inputMeter.text="INPUT\n"+s.InputVoltage.ToString("F2")+" V RMS";outputMeter.text="OUTPUT\n"+s.OutputVoltage.ToString("F2")+" V RMS";
         switchMaterial.color=powered?new Color(.12f,.8f,.3f):new Color(.3f,.32f,.35f);

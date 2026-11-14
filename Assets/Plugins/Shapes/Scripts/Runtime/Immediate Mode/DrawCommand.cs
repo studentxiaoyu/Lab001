@@ -33,7 +33,9 @@ namespace Shapes {
 		internal static Dictionary<Camera, List<DrawCommand>> cBuffersRendering = new Dictionary<Camera, List<DrawCommand>>(); // to avoid decentralized nullchecking for every onPostRender event
 
 		static DrawCommand() {
-			#if !(SHAPES_URP || SHAPES_HDRP)
+			#if SHAPES_URP
+			RenderPipelineManager.endCameraRendering += ReleaseUnrenderedCommands;
+			#elif !SHAPES_HDRP
 			Camera.onPostRender += OnPostRenderBuiltInRP;
 			#endif
 
@@ -45,6 +47,15 @@ namespace Shapes {
 			EditorSceneManager.newSceneCreated += ( scene, setup, mode ) => FlushNullCameras();
 			#endif
 		}
+
+		#if SHAPES_URP
+		static void ReleaseUnrenderedCommands( ScriptableRenderContext context, Camera camera ) {
+			if( cBuffersRendering.Remove( camera, out List<DrawCommand> commands ) ) {
+				foreach( DrawCommand command in commands )
+					command.Clear();
+			}
+		}
+		#endif
 
 		/// <summary>Removes all DrawCommands currently submitted</summary>
 		public static void ClearAllCommands() {

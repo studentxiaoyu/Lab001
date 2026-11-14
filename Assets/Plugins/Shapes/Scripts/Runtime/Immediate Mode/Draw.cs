@@ -405,8 +405,13 @@ namespace Shapes {
 			if( tmp == null )
 				return;
 
+			// Track the allocation before TMP generates its mesh so the command can release it on failure.
+			if( element == null && DrawCommand.IsAddingDrawCommandsToBuffer )
+				DrawCommand.CurrentWritingCommandBuffer.cachedTextIds.Add( id );
+
 			ApplyTextValuesToInstance( tmp, isRect, content, font, fontSize, align, pivot, size, color );
-			Text_Internal( tmp, drawType, id );
+			if( tmp.fontSharedMaterial != null && tmp.mesh != null )
+				Text_Internal( tmp, drawType );
 		}
 
 		delegate void OnPreRenderTmpDelegate( TextMeshPro tmp );
@@ -462,9 +467,9 @@ namespace Shapes {
 		}
 
 
-		static void Text_Internal( TextMeshPro tmp, IMDrawer.DrawType drawType, int disposeId = -1 ) {
+		static void Text_Internal( TextMeshPro tmp, IMDrawer.DrawType drawType ) {
 			// todo: something fucky happens sometimes when fallback fonts are the only things in town
-			using( new IMDrawer( mpbText, tmp.fontSharedMaterial, tmp.mesh, drawType: drawType, allowInstancing: false, textAutoDisposeId: disposeId ) ) {
+			using( new IMDrawer( mpbText, tmp.fontSharedMaterial, tmp.mesh, drawType: drawType, allowInstancing: false ) ) {
 				// will draw on dispose
 			}
 

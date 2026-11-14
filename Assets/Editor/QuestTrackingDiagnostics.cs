@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.XR;
 
 // Temporary read-only probe. Does not change the scene, camera or tracking.
@@ -13,7 +15,16 @@ public static class QuestTrackingDiagnostics
     private static int samples;
     private static readonly string Output = Path.GetFullPath("Validation/QuestTrackingDiagnostics.log");
 
-    static QuestTrackingDiagnostics() { EditorApplication.update += Sample; }
+    static QuestTrackingDiagnostics()
+    {
+        EditorApplication.update += Sample;
+        EditorApplication.playModeStateChanged += state =>
+        {
+            if (state != PlayModeStateChange.EnteredPlayMode) return;
+            samples = 0;
+            next = 0;
+        };
+    }
 
     private static string Device(XRNode node)
     {
@@ -37,6 +48,22 @@ public static class QuestTrackingDiagnostics
             string text = $"\n{DateTime.Now:HH:mm:ss} play={EditorApplication.isPlaying} pause={EditorApplication.isPaused} frame={Time.frameCount} xr={XRSettings.isDeviceActive} display={displays.Any(d => d.running)} ovrInit={OVRManager.OVRManagerinitialized} hmd={OVRManager.isHmdPresent}\n";
             if (EditorApplication.isPlaying)
             {
+                var pipeline = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+                var display = displays.FirstOrDefault(d => d.running);
+                if (display != null)
+                {
+                    var eye = XRSettings.eyeTextureDesc;
+                    text += $"XR render: eye={eye.width}x{eye.height} textureScale={XRSettings.eyeTextureResolutionScale:F2} viewportScale={XRSettings.renderViewportScale:F2} urpScale={pipeline?.renderScale:F2} urpMSAA={pipeline?.msaaSampleCount}";
+                    if (display.GetRenderPassCount() > 0)
+                    {
+                        display.GetRenderPass(0, out var pass);
+                        var target = pass.renderTargetDesc;
+                        text += $" target={target.width}x{target.height} targetMSAA={target.msaaSamples}";
+                    }
+                    if (display.TryGetAppGPUTimeLastFrame(out float gpuSeconds))
+                        text += $" gpuMs={gpuSeconds * 1000f:F2}";
+                    text += "\n";
+                }
                 text += Device(XRNode.Head) + "\n" + Device(XRNode.CenterEye) + "\n" + Device(XRNode.LeftHand) + "\n" + Device(XRNode.RightHand) + "\n";
                 if (OVRManager.instance != null)
                     text += $"focus={OVRManager.hasInputFocus} worn={OVRManager.instance.isUserPresent} positionTracking={OVRManager.instance.usePositionTracking} rotationTracking={OVRManager.instance.useRotationTracking}\n";

@@ -10,12 +10,11 @@ public sealed class LaboratoryPlayerView : MonoBehaviour
     [SerializeField] private Canvas[] desktopDebugCanvases;
     [Header("Quest locomotion")]
     [SerializeField, Min(0)] private float walkSpeed = 1.5f;
-    [SerializeField, Range(15, 90)] private float snapTurnAngle = 30f;
+    [SerializeField, Min(0)] private float turnSpeedDegreesPerSecond = 60f;
     [SerializeField, Range(0.1f, 0.5f)] private float stickDeadzone = 0.2f;
     [SerializeField, Min(0.6f)] private float standingEyeHeight = 1.65f;
     private CharacterController body;
     private float verticalSpeed;
-    private bool turnReady = true;
     private Quaternion initialRotation;
     private float yaw, pitch;
     private bool wasXR;
@@ -56,7 +55,6 @@ public sealed class LaboratoryPlayerView : MonoBehaviour
         {
             if (body != null) body.enabled = false;
             verticalSpeed = 0;
-            turnReady = true;
             if (Input.GetKeyDown(KeyCode.F1)) SetDebugVisible(!DebugVisible);
             if (Input.GetMouseButton(1))
             {
@@ -114,12 +112,12 @@ public sealed class LaboratoryPlayerView : MonoBehaviour
         if ((collisions & CollisionFlags.Below) != 0) verticalSpeed = -1f;
 
         float turn = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.RTouch).x;
-        if (Mathf.Abs(turn) < 0.3f) turnReady = true;
-        if (turnReady && Mathf.Abs(turn) > 0.7f)
+        float turnMagnitude = Mathf.InverseLerp(stickDeadzone, 1f, Mathf.Abs(turn));
+        if (turnMagnitude > 0f)
         {
             // Pivot at the player's head so turning does not orbit the room.
-            rig.RotateAround(head.position, Vector3.up, Mathf.Sign(turn) * snapTurnAngle);
-            turnReady = false;
+            float turnAngle = Mathf.Sign(turn) * turnMagnitude * turnSpeedDegreesPerSecond * Time.deltaTime;
+            rig.RotateAround(head.position, Vector3.up, turnAngle);
         }
     }
 
