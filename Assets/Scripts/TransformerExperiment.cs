@@ -30,7 +30,7 @@ public class TransformerExperiment : MonoBehaviour
     }
     public readonly List<Record> records=new List<Record>();
     public TransformerPhysics.State Current => TransformerPhysics.At(inputVoltage,primaryTurns,secondaryTurns,powered);
-    private Canvas accelerationDesktopCanvas;
+    [SerializeField] private Canvas sharedDesktopCanvas;
     private IsothermalGasExperiment gasStation;
     private bool ready;
     private int knobTarget;
@@ -66,9 +66,13 @@ public class TransformerExperiment : MonoBehaviour
         previewCamera.transform.LookAt(apparatus.position+Vector3.up*.16f);
         previewCamera.enabled=false;
         previewImage.enabled=false;
-        var acceleration=FindObjectOfType<AccelerationExperiment>();
-        if(acceleration!=null && acceleration.desktopReadout!=null)
-            accelerationDesktopCanvas=acceleration.desktopReadout.GetComponentInParent<Canvas>();
+        if (sharedDesktopCanvas == null)
+        {
+            // The saved URP diagnostic scene still uses its original station.
+            var acceleration = FindObjectOfType<AccelerationExperiment>();
+            if (acceleration != null && acceleration.desktopReadout != null)
+                sharedDesktopCanvas = acceleration.desktopReadout.GetComponentInParent<Canvas>();
+        }
         gasStation=FindObjectOfType<IsothermalGasExperiment>();
         desktopPanel.SetActive(false);
     }
@@ -157,9 +161,9 @@ public class TransformerExperiment : MonoBehaviour
             gasStation.TogglePanel();
         desktopPanel.SetActive(show);
         previewCamera.enabled=false;
-        if(accelerationDesktopCanvas!=null) {
+        if(sharedDesktopCanvas!=null) {
             var view=FindObjectOfType<LaboratoryPlayerView>();
-            accelerationDesktopCanvas.enabled=!show && view!=null && view.DebugVisible
+            sharedDesktopCanvas.enabled=!show && view!=null && view.DebugVisible
                 && (gasStation==null || !gasStation.desktopPanel.activeSelf);
         }
         if(graphCamera!=null)graphCamera.enabled=show;
@@ -170,8 +174,8 @@ public class TransformerExperiment : MonoBehaviour
         // The gas panel can also be opened from the shared navigation buttons.
         if(desktopPanel.activeSelf && gasStation!=null && gasStation.desktopPanel.activeSelf)
             desktopPanel.SetActive(false);
-        if(desktopPanel.activeSelf && accelerationDesktopCanvas!=null)
-            accelerationDesktopCanvas.enabled=false;
+        if(desktopPanel.activeSelf && sharedDesktopCanvas!=null)
+            sharedDesktopCanvas.enabled=false;
     }
 
     private void Refresh()

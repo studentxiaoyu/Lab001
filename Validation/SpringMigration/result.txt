@@ -1,0 +1,1 @@
+PASS. Main loaded, apparatus references resolved, graphs switched, spring moved and reset, other desktop panels opened and closed.

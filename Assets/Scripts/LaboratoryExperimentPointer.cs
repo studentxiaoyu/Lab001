@@ -36,6 +36,7 @@ public sealed class LaboratoryExperimentPointer : MonoBehaviour
     [SerializeField] private PokeButton[] buttons;
     [SerializeField] private Toggle[] graphTabs;
     [SerializeField] private TransformerExperiment transformer;
+    [SerializeField] private AmpereExperiment ampere;
     [SerializeField] private Transform transformerParameterPanel;
     [SerializeField] private Material rayMaterial;
 
@@ -68,7 +69,7 @@ public sealed class LaboratoryExperimentPointer : MonoBehaviour
         powerLabel.transform.SetParent(switchObject.transform, false);
         powerLabel.transform.localPosition = Vector3.back * 0.002f;
         powerLabel.rectTransform.sizeDelta = new Vector2(powerBackground.Width, powerBackground.Height);
-        powerLabel.font = transformer.worldReadout.font;
+        powerLabel.font = ampere ? ampere.readout.font : transformer.worldReadout.font;
         powerLabel.fontSize = 0.32f;
         powerLabel.isOrthographic = false;
         powerLabel.fontStyle = FontStyles.Bold;
@@ -98,7 +99,7 @@ public sealed class LaboratoryExperimentPointer : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (transformer.powered != powerWasOn)
+        if ((ampere ? ampere.induction : transformer.powered) != powerWasOn)
             RefreshPowerLabel();
 
         pressedThisFrame = null;
@@ -162,7 +163,7 @@ public sealed class LaboratoryExperimentPointer : MonoBehaviour
             distance = hitDistance;
         }
 
-        bool powerHit = transformer.isActiveAndEnabled && powerLabel.isActiveAndEnabled
+        bool powerHit = (ampere ? ampere.isActiveAndEnabled : transformer.isActiveAndEnabled) && powerLabel.isActiveAndEnabled
             && HitRect(ray, powerLabel.rectTransform, distance, out distance);
         UnityEngine.Object target = powerHit ? powerLabel : tab != null ? (UnityEngine.Object)tab : button?.surface;
         // A short beam when idle keeps the lab view clear. A hit extends it to the control.
@@ -178,7 +179,8 @@ public sealed class LaboratoryExperimentPointer : MonoBehaviour
             pressedThisFrame = target;
             if (powerHit)
             {
-                transformer.TogglePower();
+                if (ampere) ampere.ToggleMode();
+                else transformer.TogglePower();
                 RefreshPowerLabel();
             }
             else if (tab != null)
@@ -250,9 +252,9 @@ public sealed class LaboratoryExperimentPointer : MonoBehaviour
 
     private void RefreshPowerLabel()
     {
-        powerWasOn = transformer.powered;
-        powerLabel.text = powerWasOn ? "AC POWER: ON" : "AC POWER: OFF";
-        powerBackground.Color = powerWasOn ? new Color(0.06f, 0.4f, 0.28f) : new Color(0.21f, 0.26f, 0.31f);
+        powerWasOn = ampere ? ampere.induction : transformer.powered;
+        powerLabel.text = ampere ? (powerWasOn ? "Induction" : "Constant current") : (powerWasOn ? "AC POWER: ON" : "AC POWER: OFF");
+        powerBackground.Color = ampere ? new Color(0, 0.2901961f, 0.7254902f) : (powerWasOn ? new Color(0.06f, 0.4f, 0.28f) : new Color(0.21f, 0.26f, 0.31f));
     }
 
     private sealed class Pointer

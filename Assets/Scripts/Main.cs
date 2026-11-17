@@ -91,7 +91,8 @@ public partial class Main : MonoBehaviour
         knobAngle            = DataSetting.GetComponent<KnobAngle>("Objects/LabTable/Base/KnobObj");
         knobRotate           = DataSetting.GetComponent<KnobRotate>("Objects/LabTable/Base/KnobObj");
 
-        rightHandAnchorDetached = DataSetting.GetComponent<Transform>("OVRCameraRig/TrackingSpace/RightHandAnchorDetached");
+        if (rightHandAnchorDetached == null)
+            rightHandAnchorDetached = DataSetting.GetComponent<Transform>("OVRCameraRig/TrackingSpace/RightHandAnchorDetached");
 
         blockBTranslateTransformer = DataSetting.GetComponent<OneGrabTranslateTransformer>("Objects/LabTable/Track/Couple/BlockB");
         knobRotateTransformer      = DataSetting.GetComponent<OneGrabRotateTransformer>("Objects/LabTable/Base/KnobObj/Up");

@@ -1,0 +1,6 @@
+PASS Main Play frame=21, rigs=1, skinned meshes=1, URP materials=3
+PASS desktop visibility, head rotation and both arm poses
+PASS reachable wrist targets, error L=0.00000 m R=0.00000 m
+PASS independent tracking-loss fallback and no writes to rig/eye transforms
+OpenXR runtime=Meta XR Simulator, HMD reported=True, OVR initialized=True. Test poses were simulated.
+PASS F2 in Unity Game view toggled desktop preview on and off with Meta XR Simulator active.

@@ -30,7 +30,7 @@ public class IsothermalGasExperiment : MonoBehaviour
     public readonly List<Record> records = new List<Record>();
     private RenderTexture preview, graphPreview;
     private Camera graphPreviewCamera;
-    private Canvas accelerationDesktopCanvas;
+    [SerializeField] private Canvas sharedDesktopCanvas;
     private bool ready;
     private float knobReadyAt;
     private string message = "Set volume, keep temperature, then RECORD each equilibrium state.";
@@ -59,9 +59,13 @@ public class IsothermalGasExperiment : MonoBehaviour
         previewCamera.transform.LookAt(chamber.position+Vector3.up*0.12f);
         previewCamera.enabled=false;
         previewImage.enabled=false; // Desktop uses the room apparatus, like acceleration.
-        var acceleration = FindObjectOfType<AccelerationExperiment>();
-        if (acceleration != null && acceleration.desktopReadout != null)
-            accelerationDesktopCanvas = acceleration.desktopReadout.GetComponentInParent<Canvas>();
+        if (sharedDesktopCanvas == null)
+        {
+            // The saved URP diagnostic scene still uses its original station.
+            var acceleration = FindObjectOfType<AccelerationExperiment>();
+            if (acceleration != null && acceleration.desktopReadout != null)
+                sharedDesktopCanvas = acceleration.desktopReadout.GetComponentInParent<Canvas>();
+        }
         desktopPanel.SetActive(false);
         gaugeNeedle.parent.localRotation=Quaternion.Euler(0,180,0);
     }
@@ -163,9 +167,9 @@ public class IsothermalGasExperiment : MonoBehaviour
         bool show=!desktopPanel.activeSelf;
         desktopPanel.SetActive(show);
         previewCamera.enabled=false; // No floating apparatus preview in the desktop controls.
-        if (accelerationDesktopCanvas != null) {
+        if (sharedDesktopCanvas != null) {
             var view = FindObjectOfType<LaboratoryPlayerView>();
-            accelerationDesktopCanvas.enabled = !show && view != null && view.DebugVisible;
+            sharedDesktopCanvas.enabled = !show && view != null && view.DebugVisible;
         }
         if(graphPreviewCamera!=null)graphPreviewCamera.enabled=show;
         if(show) { SynchronizeControls();RefreshDisplays(); }
@@ -173,8 +177,8 @@ public class IsothermalGasExperiment : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (desktopPanel.activeSelf && accelerationDesktopCanvas != null)
-            accelerationDesktopCanvas.enabled = false;
+        if (desktopPanel.activeSelf && sharedDesktopCanvas != null)
+            sharedDesktopCanvas.enabled = false;
     }
 
     private void SynchronizeControls()
