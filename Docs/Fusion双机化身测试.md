@@ -32,4 +32,10 @@
 
 ## 已有检查与未验证项
 
+启动修复后，请两端先停止 Play，再拉取同一版本，重新进入 Play；不要在旧的异常运行状态下继续测试。Game 新增 Avatar 状态行：只有 `Avatar spawned` 才表示化身初始化完成；`Connected; waiting ...` 表示正在等待玩家／场景准备；生成失败会要求 STOP Play，不再自动反复尝试。
+
+如需先单独检查一端，可在编辑模式通过 Tools → Lab → Check Shared Avatar Startup (Play) 启动有时间上限的回归检查。成功条件是完成 Shared 启动、只生成一个本地网络化身，并在随后 4 秒内无相关生成异常；测试会自动退出 Play。输出在 Temp/LaboratoryNetworkStartupCheck.result.txt，不加入 Git。该检查不等于双机互相可见测试。
+
+2026-11-21 启动顺序修复已通过上述单端 Main Play 检查，未复现先前 GetNextId 空引用和 already owned 重复注册。后续仍需双机和真实动作对照。
+
 2026-11-21：C# 编译、Fusion IL Weaver、网络预制体导入，以及编辑器中的远端模型创建、失追踪隐藏、无重复相机／网络会话检查已通过。尚未完成双进程入同房、跨电脑同步、Quest 3 双机动作对照、持续运行与退出重连实测。

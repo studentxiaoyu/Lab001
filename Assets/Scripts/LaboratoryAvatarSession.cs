@@ -12,13 +12,17 @@ public sealed class LaboratoryAvatarSession : MonoBehaviour
     public NetworkRunner Runner { get; private set; }
     private NetworkObject localObject;
     private NetworkObject prefab;
-    private float nextAttempt;
+    private FusionBootstrap bootstrap;
+    private bool spawnAttempted;
+    public bool AvatarReady => localObject != null && localObject.IsValid;
+    public bool SpawnFailed { get; private set; }
     private string status = "Waiting for Fusion connection";
 
     private void Awake()
     {
         Source = GetComponent<LaboratoryLocalAvatar>();
         Instance = this;
+        bootstrap = FindFirstObjectByType<FusionBootstrap>();
         prefab = Resources.Load<NetworkObject>(PrefabPath);
         if (prefab == null) Debug.LogError("[LabNetwork] Missing Resources/" + PrefabPath + ".prefab");
     }
@@ -36,14 +40,23 @@ public sealed class LaboratoryAvatarSession : MonoBehaviour
                 Debug.Log("[LabNetwork] Simulated network pose: " + DesktopTest);
             }
         }
-        if (Runner == null || !Runner.IsRunning)
+        if (Runner == null || Runner.IsShutdown)
         {
-            localObject = null;
-            Runner = NetworkRunner.Instances.FirstOrDefault(r => r.IsRunning && r.GameMode == GameMode.Shared);
-            status = "Waiting for Fusion Shared connection";
+            var candidate = NetworkRunner.Instances.FirstOrDefault(r => !r.IsShutdown && r.GameMode == GameMode.Shared);
+            if (Runner != candidate)
+            {
+                Runner = candidate;
+                localObject = null;
+                spawnAttempted = false;
+                SpawnFailed = false;
+            }
         }
-        if (Runner == null || prefab == null || localObject != null || Time.unscaledTime < nextAttempt) return;
-        nextAttempt = Time.unscaledTime + 3;
+        if (SpawnFailed) return;
+        if (!IsReadyToSpawn()) return;
+        if (prefab == null) { status = "Network avatar prefab missing (see Console)"; return; }
+        if (AvatarReady || spawnAttempted) return;
+        // A failed Spawn can leave an instance partially attached. Never retry on that runner.
+        spawnAttempted = true;
         try
         {
             if (!Runner.TryGetPlayerObject(Runner.LocalPlayer, out localObject))
@@ -56,9 +69,24 @@ public sealed class LaboratoryAvatarSession : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            status = "Avatar spawn failed (see Console)";
+            SpawnFailed = true;
+            status = "Avatar spawn failed; STOP Play before retrying (see Console)";
             Debug.LogException(e);
         }
+    }
+
+    private bool IsReadyToSpawn()
+    {
+        // IsRunning becomes true before StartGame completes and before the local player ID exists.
+        if (Runner == null || !Runner.IsRunning || Runner.IsStarting || !Runner.IsInSession)
+        { status = "Waiting for Fusion Shared connection"; return false; }
+        if (bootstrap != null && bootstrap.CurrentStage != FusionBootstrap.Stage.AllConnected)
+        { status = "Connected; waiting for Fusion startup to finish"; return false; }
+        if (!Runner.LocalPlayer.IsRealPlayer || !Runner.ActivePlayers.Contains(Runner.LocalPlayer))
+        { status = "Connected; waiting for local player registration"; return false; }
+        if (Runner.SceneManager == null || Runner.SceneManager.IsBusy)
+        { status = "Connected; waiting for scene initialization"; return false; }
+        return true;
     }
 
     public bool Sample(out Pose eye, out Pose? left, out Pose? right)
@@ -82,11 +110,12 @@ public sealed class LaboratoryAvatarSession : MonoBehaviour
 
     private void OnGUI()
     {
-        string connection = Runner != null && Runner.IsRunning
+        string connection = Runner != null && Runner.IsRunning && !Runner.IsStarting && Runner.IsInSession
             ? "Room: " + Runner.SessionInfo.Name + " | Region: " + Runner.SessionInfo.Region + " | Players: " + Runner.ActivePlayers.Count()
             : status;
-        GUILayout.BeginArea(new Rect(12, Screen.height - 130, 680, 120), GUI.skin.box);
+        GUILayout.BeginArea(new Rect(12, Screen.height - 155, 720, 145), GUI.skin.box);
         GUILayout.Label("Fusion | " + connection);
+        GUILayout.Label("Avatar: " + status);
         GUILayout.Label("Pose: " + (DesktopTest ? "SIMULATED (F3)" : "Headset tracking required"));
         GUILayout.Label("Remote avatars: " + LaboratoryNetworkAvatar.VisibleRemoteCount + " | F3: desktop network test");
         if (LaboratoryNetworkAvatar.SimulatedRemoteCount > 0) GUILayout.Label("Remote pose is SIMULATED; not headset validation");
@@ -95,7 +124,7 @@ public sealed class LaboratoryAvatarSession : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (Runner != null && Runner.IsRunning && localObject != null && localObject.HasStateAuthority)
+        if (Runner != null && Runner.IsRunning && !Runner.IsStarting && AvatarReady && localObject.HasStateAuthority)
             Runner.Despawn(localObject);
         if (Instance == this) Instance = null;
     }
