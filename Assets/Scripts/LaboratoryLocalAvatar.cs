@@ -18,6 +18,47 @@ public sealed class LaboratoryLocalAvatar : MonoBehaviour
     private Quaternion headRestRotation;
     private Arm leftArm;
     private Arm rightArm;
+    private bool remoteDriven;
+
+    public OVRCameraRig CameraRig => cameraRig;
+
+    // Remote copies contain only a visual driver, never another camera, input rig or network bridge.
+    public LaboratoryLocalAvatar CreateRemote(string playerName)
+    {
+        var root = new GameObject(playerName);
+        root.SetActive(false);
+        var copy = root.AddComponent<LaboratoryLocalAvatar>();
+        copy.remoteDriven = true;
+        copy.cameraRig = cameraRig;
+        copy.humanoidModel = humanoidModel;
+        copy.standingEyeHeight = standingEyeHeight;
+        copy.headToEye = headToEye;
+        copy.leftGripRotationOffset = leftGripRotationOffset;
+        copy.rightGripRotationOffset = rightGripRotationOffset;
+        root.SetActive(true);
+        return copy;
+    }
+
+    public void ShowRemote(bool visible, Pose eye, Pose? left, Pose? right)
+    {
+        if (!remoteDriven || body == null) return;
+        if (visible) ApplyPose(eye, left, right);
+        else body.gameObject.SetActive(false);
+    }
+
+    public bool TryGetTrackedPose(out Pose eye, out Pose? left, out Pose? right)
+    {
+        eye = default; left = right = null;
+        if (remoteDriven || cameraRig == null || cameraRig.centerEyeAnchor == null
+            || cameraRig.trackingSpace == null || !OVRManager.OVRManagerinitialized
+            || OVRManager.instance == null || !OVRManager.hasInputFocus || !OVRManager.instance.isUserPresent
+            || !OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.EyeCenter)
+            || !OVRPlugin.GetNodeOrientationTracked(OVRPlugin.Node.EyeCenter)) return false;
+        eye = new Pose(cameraRig.centerEyeAnchor.position, cameraRig.centerEyeAnchor.rotation);
+        left = GetTouchPose(OVRInput.Controller.LTouch);
+        right = GetTouchPose(OVRInput.Controller.RTouch);
+        return true;
+    }
 
 #if UNITY_EDITOR
     private bool simulatorActive;
@@ -64,6 +105,8 @@ public sealed class LaboratoryLocalAvatar : MonoBehaviour
             return;
         }
         body.localScale *= standingEyeHeight / modelEyeHeight;
+        if (!remoteDriven && GetComponent<LaboratoryAvatarSession>() == null)
+            gameObject.AddComponent<LaboratoryAvatarSession>();
     }
 
     private void FailInitialization(string message)
@@ -80,6 +123,7 @@ public sealed class LaboratoryLocalAvatar : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (remoteDriven) return;
         Transform eye = cameraRig.centerEyeAnchor;
         bool xrActive = XRSettings.isDeviceActive || OVRManager.isHmdPresent;
 #if UNITY_EDITOR
