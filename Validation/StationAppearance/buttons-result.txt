@@ -1,0 +1,1 @@
+Main reloaded. Both parameter panels rendered in edit mode.

@@ -16,6 +16,7 @@ public class Y_Axis : Axis
 
     [Range(-1, 1)]
     public float centerPos = 0f;
+    [Min(0.001f)] public float previewScale = 1f;
 
     public float ValueRange => maxIndex - minIndex; // Y 轴数值范围
 
@@ -38,8 +39,8 @@ public class Y_Axis : Axis
         drawer.xAxis.transform.localPosition = Vector3.up * (halfWorldLength * centerPos);
 
         if (!Application.isPlaying) {
-            maxIndex = 1 - centerPos;
-            minIndex = -(centerPos + 1);
+            maxIndex = (1 - centerPos) * previewScale;
+            minIndex = -(centerPos + 1) * previewScale;
         }
 
         unitLineUp.Start   = unitLineUp.Start.Set(y: halfWorldLength * centerPos);

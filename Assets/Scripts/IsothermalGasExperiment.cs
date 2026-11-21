@@ -67,7 +67,6 @@ public class IsothermalGasExperiment : MonoBehaviour
                 sharedDesktopCanvas = acceleration.desktopReadout.GetComponentInParent<Canvas>();
         }
         desktopPanel.SetActive(false);
-        gaugeNeedle.parent.localRotation=Quaternion.Euler(0,180,0);
     }
 
     private static void AssignMesh(MeshFilter filter, string name)
@@ -215,10 +214,11 @@ public class IsothermalGasExperiment : MonoBehaviour
             pressureGraph.ShowHighlightPoints();
         } else pressureGraph.HideHighlightPoints();
         int count=records.Count(r=>IsothermalGasPhysics.SameIsotherm(r.kelvin,r.isothermal,temperatureK));
-        worldReadout.text = $"<b>BOYLE'S LAW</b>\nIsothermal: {(isothermal ? "ON" : "OFF")}\n\n" +
-            $"Volume  {s.VolumeMl:F0} mL\n<b>Pressure  {s.PressureKPa:F2} kPa</b>\n" +
-            $"Temperature  {s.TemperatureK:F1} K\npV  {s.PV:F3} J\n\n" +
-            $"p = nRT / V   |   n = 0.020 mol\nPlotted: {count}   |   Records: {records.Count}\n{message}";
+        worldReadout.text = (isothermal ? "<b>Boyle's law</b>\nAt fixed T, doubling V halves p."
+                                        : "<b>Ideal gas law</b>\nAt fixed V, p rises with T.") +
+            $"\n\n<i>p = nRT / V</i>\nn = 0.020 mol     T = {s.TemperatureK:F0} K\n" +
+            $"V = {s.VolumeMl:F0} mL\n<color=#236765>p = {s.PressureKPa:F2} kPa</color>\n" +
+            $"pV = {s.PV:F2} J\n\nIsotherm samples   {count}\n<size=80%>{message}</size>";
         desktopReadout.text=string.Format(
             "<b><color=#176B70>GAS EXPERIMENT</color></b>\n" +
             "Temperature: <b>{0}</b>\n\n" +

@@ -237,10 +237,11 @@ public sealed class AmpereExperiment : MonoBehaviour
         parameters[0].text = $"{EffectiveCurrent:F2} A";
         parameters[1].text = $"{magneticStrength:F0} T";
         parameters[2].text = micro ? "Micro ON" : "Micro OFF";
-        readout.text = $"<i>F</i> = <i>I L</i> × <i>B</i>\n<i>E</i> = (<i>v</i> × <i>B</i>) · <i>L</i>\n\n"
-            + $"<color=red>I = {EffectiveCurrent:F3} A</color>\n<color=blue>B = {magneticStrength:F1} T</color>\n"
-            + $"<color=#008000>F = {Force.magnitude:F3} N</color>\nE = {Emf:F3} V\nv = {Velocity.magnitude:F2} m/s\n"
-            + $"L = {ActiveLength:F3} m\n\n{note}";
+        readout.text = (induction
+            ? $"<b>Motion-induced voltage</b>\n<i>E = (v × B) · L</i>\nv = {Velocity.magnitude:F2} m/s     E = {Emf:F3} V\n<i>I = E / R</i>"
+            : "<b>Ampere force</b>\n<i>F = I (L × B)</i>\nReverse I or B to reverse F.") +
+            $"\n\nI = {EffectiveCurrent:F3} A     B = {magneticStrength:F1} T\n" +
+            $"L in field = {ActiveLength:F3} m\n<color=#874020>|F| = {Force.magnitude:F3} N</color>\n\n<size=80%>{note}</size>";
     }
 
     private void OnDisable() { holder = OVRInput.Controller.None; Velocity = Vector3.zero; leftReady = rightReady = false; }
